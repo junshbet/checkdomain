@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Web</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/sweetalert2.min.css" rel="stylesheet">
+    <link href="/css/dataTables.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+</head>
+
+<body>
+<div id="preloder">
+    <div class="loader"></div>
+</div>
+
+<div class="container-lg">
+    <div th:replace="~{_nav.html}"></div>
+    <div class="col-12 mt-5 mb-5">
+        <h1 class="text-center text-uppercase">Check Domain</h1>
+    </div>
+    <div class="row g-3 justify-content-between">
+        <div class="col-auto">
+            <button id="btn-check" type="button" class="btn btn-primary mb-3">check</button>
+            <label class="btn btn-primary border-1 mb-3" for="inputGroupFile01">Import</label>
+            <input type="file" class="form-control d-none" id="inputGroupFile01" accept=".xlsx"/>
+        </div>
+        <div class="col-auto">
+            <button id="btn-delete-all" type="button" class="btn btn-primary mb-3">Xóa</button>
+            <button id="btn-clear" type="button" class="btn btn-primary mb-3">Clear Check</button>
+            <button id="btn-add-new" type="button" class="btn btn-primary mb-3">Add New</button>
+        </div>
+        <div class="col-12">
+            <table class="table table-hover table-responsive" id="domainTable">
+                <thead>
+                <tr>
+                    <th scope="col"><input class="form-check-input" type="checkbox" id="checkAll"></th>
+                    <th scope="col">Domain</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="d-none d-lg-table-cell">Note</th>
+                    <th scope="col">Check times</th>
+                    <th scope="col">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="table_show_data">
+                </tbody>
+            </table>
+        </div>
+        <div class="col-12">
+            <h2>Phân loại mã trạng thái HTTP</h2>
+            <p>Mã trạng thái <span class="code-group">1xx, 2xx, 3xx:</span> Không phải lỗi.</p>
+            <ul>
+                <li><p><span class="code-group">1xx:</span> Thông báo thông tin.</p></li>
+                <li><p><span class="code-group">2xx:</span> Thành công.</p></li>
+                <li><p><span class="code-group">3xx:</span> Chuyển hướng.</p></li>
+            </ul>
+            <p>Mã trạng thái <span class="code-group client-error">4xx (lỗi từ người dùng):</span></p>
+            <ul>
+                <li><p>Đây là lỗi do phía khách hàng, chẳng hạn như yêu cầu không hợp lệ hoặc không có quyền truy cập
+                    vào tài nguyên.</p></li>
+            </ul>
+            <p>Mã trạng thái <span class="code-group server-error">5xx (lỗi từ máy chủ):</span></p>
+            <ul>
+                <li><p>Đây là lỗi do phía máy chủ, cho thấy rằng máy chủ gặp sự cố trong quá trình xử lý yêu cầu hoặc
+                    không thể hoàn thành yêu cầu.</p></li>
+            </ul>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Setup Domain</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="domain" class="form-label">Domain:</label>
+                    <input type="text" class="form-control" id="domain" placeholder="https://example.com">
+                    <input type="text" id="id_domain" hidden="hidden">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button id="btn_save_domain" type="button" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="offcanvas offcanvas-end offcanvas-md" tabindex="-1" id="offcanvasRight"
+     aria-labelledby="offcanvasRightLabel">
+    <div class="offcanvas-header">
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        <h5 id="offcanvasRightLabel" class="text-center w-100">View details</h5>
+    </div>
+    <div class="offcanvas-body">
+        <div class="row">
+            <h1 class="col-12 text-center" id="offcanvas-domain-name"></h1>
+            <div class="col-6">
+                <label for="offcanvas-domain" class="form-label">Link :</label>
+                <input type="text" disabled class="form-control border-0" id="offcanvas-domain">
+            </div>
+            <div class="col-6">
+                <label for="offcanvas-ip" class="form-label">IP :</label>
+                <input type="text" disabled class="form-control border-0" id="offcanvas-ip">
+            </div>
+            <div class="col-6">
+                <label for="offcanvas-type" class="form-label">Type:</label>
+                <input type="text" disabled class="form-control border-0" id="offcanvas-type">
+            </div>
+            <div class="col-6">
+                <label for="offcanvas-check-time" class="form-label">Check Time:</label>
+                <input type="text" disabled class="form-control border-0" id="offcanvas-check-time">
+            </div>
+            <h4 class="col-12 mt-5 mb-3 text-center">Status Needs Attention</h4>
+            <div class="col-6">
+                <label for="offcanvas-check-status" class="form-label">Status:</label>
+                <input type="text" disabled class="form-control border-0" id="offcanvas-check-status">
+            </div>
+            <div class="col-6">
+                <label for="offcanvas-check-mesage" class="form-label">Message:</label>
+                <input type="text" disabled class="form-control border-0" id="offcanvas-check-mesage">
+            </div>
+            <h4 class="col-12 mt-5 mb-3 text-center">Check According to Network</h4>
+            <table class="table table-responsive col-12">
+                <thead>
+                <tr>
+                    <th scope="col">Telecom Operator</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Message</th>
+                </tr>
+                </thead>
+                <tbody id="showStaus">
+                <tr>
+                    <td>Mobifone</td>
+                    <td>N/A</td>
+                    <td>N/A</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<footer class="bg-dark text-white text-center py-3 no-copy">
+   SHFC JUNT &copy; <span id="currentYear"></span> All rights reserved. Copying content is prohibited.
+</footer>
+<script src="/js/jquery.min.js"></script>
+<script src="/js/sweetalert2.all.min.js"></script>
+<script src="/js/popper.min.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+<script src="/js/dataTables.min.js"></script>
+<script src="/js/xlsx.full.min.js"></script>
+<script src="/js/checkDomain.js"></script>
+</body>
+
+</html>

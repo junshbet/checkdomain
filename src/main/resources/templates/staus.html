@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Web</title>
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/sweetalert2.min.css" rel="stylesheet">
+    <link href="/css/dataTables.min.css" rel="stylesheet">
+</head>
+
+<body>
+<div class="container">
+    <div th:replace="~{_nav.html}"></div>
+    <div class="col-12 mt-5">
+        <h1 class="text-center text-uppercase">Status</h1>
+    </div>
+    <div class="row g-3 justify-content-between">
+        <div class="col-auto">
+            <a class="btn btn-primary" href="/">
+                Back To Check
+            </a>
+        </div>
+        <div class="col-auto">
+
+            <button id="btn_add_status" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                Add
+            </button>
+        </div>
+        <div class="col-12">
+            <table class="table table-hover" id="myTable">
+                <thead>
+                <tr>
+                    <th scope="col" class="text-center">#</th>
+                    <th scope="col" class="text-center">Status</th>
+                    <th scope="col">Message</th>
+                    <th scope="col" class="text-center">Actions</th>
+                </tr>
+                </thead>
+                <tbody id="table_show_data">
+                <tr th:each="st:${lstStatus}">
+                    <td class="col_index"></td>
+                    <td><span class="col_status" th:text="${st.getStatus()}"></span></td>
+                    <td><span class="col_message" th:text="${st.getMessage()}"></span></td>
+                    <td>
+                        <button type="button" class="btn btn-primary btn_edit">Edit</button>
+                        <button type="button" class="btn btn-danger btn_del">Del</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Add new status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="status" class="form-label">Status</label>
+                    <input type="text" class="form-control" id="status" placeholder="Status HTTP code...">
+                </div>
+                <div class="mb-3">
+                    <label for="message" class="form-label">Message</label>
+                    <input type="text" class="form-control" id="message" placeholder="Enter this status message...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button id="btn_save_status" type="button" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/js/jquery.min.js"></script>
+<script src="/js/sweetalert2.all.min.js"></script>
+<script src="/js/popper.min.js"></script>
+<script src="/js/dataTables.min.js"></script>
+<script src="/js/bootstrap.min.js"></script>
+<script>
+    $(document).ready(function () {
+        let datatable = new DataTable('#myTable', {
+            createdRow: function (row, data, dataIndex) {
+                $(row).find('td').eq(0).html(dataIndex + 1);
+            },
+            columnDefs: [
+                { className: "text-center", targets: [0, 1,3] }
+            ],
+            language: {
+                searchPlaceholder: "Search...",
+                search: "",
+                lengthMenu: "_MENU_",
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "Next",
+                    previous: "Previous"
+                }
+            },
+        });
+
+        // Các đoạn mã JavaScript khác
+
+        $(document).on("click", "#btn_add_status", function () {
+            $("#exampleModalLabel").text("Add new status");
+            $("#exampleModalLabel").attr("stup", 0);
+            $("#status").val("");
+            $("#message").val("");
+        });
+
+        $(document).on('click', "#btn_save_status", function () {
+            let st = $("#status").val();
+            let ms = $("#message").val();
+            let stup = $("#exampleModalLabel").attr("stup");
+            let existingStatus = false;
+
+            if (Number(stup) === 0) {
+                $(".col_status").each((index, element) => {
+                    let stb = $(element).text();
+                    if (Number(stb) === Number(st)) {
+                        existingStatus = true;
+                        ConfirmSweet("Are you sure?", "Status already exists, do you want to update it?", "Cancel", "Yes")
+                            .then((res) => {
+                                if (!res) {
+                                    return;
+                                } else {
+                                    sendAjaxRequest(st, ms);
+                                }
+                            });
+                        return false;
+                    }
+                });
+            }
+
+            if (!existingStatus) {
+                sendAjaxRequest(st, ms);
+            }
+        });
+
+        $(document).on("click", ".btn_edit", function () {
+            let tr = $(this).closest("tr");
+            let st = tr.find("span.col_status").text();
+            let ms = tr.find("span.col_message").text();
+            $("#exampleModalLabel").text("Update status");
+            $("#exampleModalLabel").attr("stup", 1);
+            $("#status").val(st);
+            $("#message").val(ms);
+            $("#exampleModal").modal('show');
+        });
+
+        $(document).on("click", '.btn_del', function () {
+            ConfirmSweet("Are you sure?", "You won't be able to revert this!", "Cancel", "Yes").then((res) => {
+                if (res) {
+                    let tr = $(this).closest("tr");
+                    let st = tr.find("span.col_status").text();
+                    $.ajax({
+                        url: "/api/v1/status/delete",
+                        type: "DELETE",
+                        data: {
+                            status: st,
+                        },
+                        success: function () {
+                            Toast("success !", 'success');
+                            datatable.row(tr).remove().draw();
+                        },
+                        error: function (e) {
+                            if (e.getResponseHeader("status") == "constrain") {
+                                Toast("Status in use", 'error');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        function sendAjaxRequest(st, ms) {
+            $.ajax({
+                url: "/api/v1/status/save",
+                type: "POST",
+                data: {
+                    status: st,
+                    message: ms,
+                },
+                success: function (response) {
+                    $("#exampleModal").modal('hide');
+                    Toast("success !", 'success');
+                    let addSt = false;
+                    $(".col_status").each((index, element) => {
+                        let stb = $(element).text();
+                        if (Number(stb) === Number(st)) {
+                            $(element).closest("tr").find("span.col_message").text(response.message);
+                            addSt = true;
+                        }
+                    });
+                    if (!addSt) {
+                        let newRow = datatable.row.add([
+                            '',
+                            `<span class="col_status">${response.status}</span>`,
+                            `<span class="col_message">${response.message}</span>`,
+                            `<button type="button" class="btn btn-primary btn_edit">Edit</button>
+                        <button type="button" class="btn btn-danger btn_del">Del</button>`
+                        ]).draw().node();
+                        $(newRow).find('td').eq(0).html(datatable.rows().count());
+                    }
+                },
+                error: function (e) {
+                    $("#exampleModal").modal('hide');
+                    alert(e.getResponseHeader("status"));
+                }
+            });
+        }
+
+        function Toast(message, status) {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: "top-end",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.onmouseenter = Swal.stopTimer;
+                    toast.onmouseleave = Swal.resumeTimer;
+                }
+            });
+            Toast.fire({
+                icon: status,
+                title: message
+            });
+        }
+
+        function ConfirmSweet(title, message, btnCancel, btnConfirm) {
+            return new Promise((resolve, reject) => {
+                Swal.fire({
+                    title: title,
+                    text: message,
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: btnConfirm,
+                    cancelButtonText: btnCancel
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        resolve(true);
+                    } else {
+                        resolve(false);
+                    }
+                });
+            });
+        }
+    });
+
+</script>
+</body>
+
+</html>

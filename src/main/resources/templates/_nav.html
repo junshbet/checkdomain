@@ -1,0 +1,57 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light"
+     xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">
+            <img width="90" src="/images/logo.png" alt="Logo" srcset="/images/logo.png">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="/file/file_mau_nhap_ten_mien.xlsx"
+                       download="file_mau_nhap_ten_mien.xlsx">Download File</a>
+                </li>
+                <th:block sec:authorize="hasAnyAuthority('ADMIN')">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            Manager
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <li>
+                                <a class="dropdown-item" href="/add-account">Add Account</a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/status">Status</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/proxy">Proxy</a>
+                            </li>
+                        </ul>
+                    </li>
+                </th:block>
+            </ul>
+            <div class="dropdown">
+                <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle"
+                   id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <img width="30" height="30" src="/images/cat.jpg" alt="user" class="rounded-circle me-2">
+                    <strong th:text="${#authentication.getPrincipal().getFullname()}">John Doe</strong>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end text-small shadow" aria-labelledby="userDropdown">
+                    <!--                        <li><a class="dropdown-item" href="#">Profile</a></li>-->
+                    <li><a class="dropdown-item" href="/change-password">Change Password</a></li>
+                    <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
